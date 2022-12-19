@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+type JsonObject = map[string]any
+
 var writeHeaderOnce = false
 var headerWritten = map[string]bool{}
 
@@ -47,7 +49,7 @@ func convert(src, dst string) {
 		panic("Could not unmarshal json:" + err.Error())
 	}
 
-	jsonStruct := jsonData.(map[string]any)
+	jsonStruct := jsonData.(JsonObject)
 	fmt.Printf("Struct: %v\n\n", jsonStruct)
 
 	var sb strings.Builder
@@ -64,7 +66,7 @@ func convert(src, dst string) {
 	os.WriteFile(dst, []byte(sb.String()), os.ModePerm)
 }
 
-func processObject(key string, object *map[string]any, output *strings.Builder) {
+func processObject(key string, object *JsonObject, output *strings.Builder) {
 	output.WriteString("<table>")
 
 	// Sort headers
@@ -96,7 +98,7 @@ func processObject(key string, object *map[string]any, output *strings.Builder) 
 		output.WriteString("<td>")
 
 		switch val := value.(type) {
-		case map[string]any:
+		case JsonObject:
 			processObject(key, &val, output)
 		case []any:
 			processArray(key, &val, output)
@@ -115,7 +117,7 @@ func processArray(key string, array *[]any, output *strings.Builder) {
 	for _, value := range *array {
 
 		switch val := value.(type) {
-		case map[string]any:
+		case JsonObject:
 			processObject(key, &val, output)
 		default:
 			panic("Can only process array of json objects.")
@@ -140,8 +142,8 @@ func processValue(value *any, output *strings.Builder) {
 
 // func getMaxPropertyCount(jsonStruct *any) int {
 // 	switch (*jsonStruct).(type) {
-// 	case map[string]any:
-// 		return len((*jsonStruct).(map[string]any))
+// 	case JsonObject:
+// 		return len((*jsonStruct).(JsonObject))
 
 // 	case []any:
 // 		max := 0
